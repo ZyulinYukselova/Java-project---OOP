@@ -169,6 +169,98 @@ public class Nfa implements Automaton {
         return result;
     }
 
+    public static Nfa concat(Nfa a1, Nfa a2) {
+        Nfa result = new Nfa();
+        Map<State, State> mappingA1 = new HashMap<>();
+        Map<State, State> mappingA2 = new HashMap<>();
+
+        // Копиране на състояния от a1
+        for (State s : a1.getStates()) {
+            State copy = new State(stateCounter++, false); // финалността ще я наглася по-късно
+            result.addState(copy);
+            mappingA1.put(s, copy);
+        }
+
+        // Копиране на състояния от a2
+        for (State s : a2.getStates()) {
+            State copy = new State(stateCounter++, s.isFinal());
+            result.addState(copy);
+            mappingA2.put(s, copy);
+        }
+
+        // Копиране на преходи от a1
+        for (var entry : a1.getTransitions().entrySet()) {
+            State from = mappingA1.get(entry.getKey());
+            for (var t : entry.getValue().entrySet()) {
+                for (State to : t.getValue()) {
+                    result.addTransition(from, t.getKey(), mappingA1.get(to));
+                }
+            }
+        }
+
+        // Копиране на преходи от a2
+        for (var entry : a2.getTransitions().entrySet()) {
+            State from = mappingA2.get(entry.getKey());
+            for (var t : entry.getValue().entrySet()) {
+                for (State to : t.getValue()) {
+                    result.addTransition(from, t.getKey(), mappingA2.get(to));
+                }
+            }
+        }
+
+        // Епсилон-преходи от финалните на a1 към старта на a2
+        for (State s : a1.getStates()) {
+            if (s.isFinal()) {
+                result.addTransition(mappingA1.get(s), EPSILON, mappingA2.get(a2.getStartState()));
+            }
+        }
+
+        // Ново начално състояние
+        result.setStartState(mappingA1.get(a1.getStartState()));
+
+        return result;
+    }
+
+    public static Nfa kleeneStar(Nfa a) {
+        Nfa result = new Nfa();
+        Map<State, State> mapping = new HashMap<>();
+
+        // Копиране на състояния
+        for (State s : a.getStates()) {
+            State copy = new State(stateCounter++, s.isFinal());
+            result.addState(copy);
+            mapping.put(s, copy);
+        }
+
+        // Копиране на преходи
+        for (var entry : a.getTransitions().entrySet()) {
+            State from = mapping.get(entry.getKey());
+            for (var t : entry.getValue().entrySet()) {
+                for (State to : t.getValue()) {
+                    result.addTransition(from, t.getKey(), mapping.get(to));
+                }
+            }
+        }
+
+        // Ново начално състояние (което е и финално)
+        State newStart = new State(stateCounter++, true);
+        result.addState(newStart);
+        result.setStartState(newStart);
+
+        // Епсилон-преход към старото начало
+        result.addTransition(newStart, EPSILON, mapping.get(a.getStartState()));
+
+        // Преходи от старите финални към старото начало
+        for (State s : a.getStates()) {
+            if (s.isFinal()) {
+                result.addTransition(mapping.get(s), EPSILON, mapping.get(a.getStartState()));
+            }
+        }
+
+        return result;
+    }
+
+
 
     @Override
     public String toString() {
