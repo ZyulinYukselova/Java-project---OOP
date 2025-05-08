@@ -261,20 +261,24 @@ public class Nfa implements Automaton {
     }
 
 
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("States: ").append(states).append("\n");
         sb.append("Alphabet: ").append(alphabet).append("\n");
         sb.append("Transitions:\n");
+
         for (Map.Entry<State, Map<Character, Set<State>>> entry : transitions.entrySet()) {
             for (Map.Entry<Character, Set<State>> innerEntry : entry.getValue().entrySet()) {
                 String symbol = innerEntry.getKey() == null ? "ε" : innerEntry.getKey().toString();
-                sb.append(entry.getKey()).append(" --").append(innerEntry.getKey()).append("--> ").append(innerEntry.getValue()).append("\n");
+                sb.append(entry.getKey())
+                        .append(" --").append(symbol).append("--> ")
+                        .append(innerEntry.getValue()).append("\n");
             }
         }
-        return sb.toString();
+
+        return sb.toString(); // задължително, иначе нищо няма да печата
     }
 }
+
 

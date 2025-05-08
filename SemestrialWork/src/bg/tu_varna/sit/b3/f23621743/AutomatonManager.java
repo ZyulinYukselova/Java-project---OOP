@@ -27,6 +27,11 @@ public class AutomatonManager {
         return a != null && a.recognizes(word);
     }
 
+    public String fromRegex(String regex) {
+        Nfa nfa = RegexParser.parse(regex);
+        return addAutomaton(nfa);
+    }
+
     public boolean isEmpty(String id) {
         Automaton a = getAutomaton(id);
         return a != null && a.isEmptyLanguage();
@@ -45,6 +50,15 @@ public class AutomatonManager {
             return addAutomaton(result);
         }
         throw new IllegalArgumentException("Union requires NFA automata.");
+    }
+
+    public String determinize(String id) {
+        Automaton automaton = getAutomaton(id);
+        if (automaton instanceof Nfa) {
+            Nfa dfa = AutomatonOperations.determinize((Nfa) automaton);
+            return addAutomaton(dfa);
+        }
+        throw new IllegalArgumentException("Only NFA can be determinized.");
     }
 
     public String concat(String id1, String id2) {

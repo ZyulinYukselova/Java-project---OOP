@@ -1,9 +1,6 @@
 package bg.tu_varna.sit.b3.f23621743;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 public class AutomatonOperations {
     private static int stateCounter = 100;
@@ -222,6 +219,87 @@ public class AutomatonOperations {
         result.getTransitions().get(mapping.get(positive.getStartState())).putIfAbsent(Nfa.EPSILON, Set.of(newStart));
         return result;
     }
+
+    public static Nfa determinize(Nfa nfa) {
+        Nfa dfa = new Nfa();
+        Map<Set<State>, State> stateMap = new HashMap<>();
+        Queue<Set<State>> queue = new LinkedList<>();
+
+        Set<State> startClosure = epsilonClosure(nfa, Set.of(nfa.getStartState()));
+        State startState = new State(NfaStateCounter.next(), containsFinal(startClosure));
+        dfa.addState(startState);
+        dfa.setStartState(startState);
+        stateMap.put(startClosure, startState);
+        queue.add(startClosure);
+
+        while (!queue.isEmpty()) {
+            Set<State> currentSet = queue.poll();
+            State currentDfaState = stateMap.get(currentSet);
+
+            for (Character symbol : getUsedAlphabet(nfa)) {
+                if (symbol == Nfa.EPSILON) continue;
+
+                Set<State> moveResult = move(nfa, currentSet, symbol);
+                Set<State> closure = epsilonClosure(nfa, moveResult);
+
+                if (closure.isEmpty()) continue;
+
+                State targetState = stateMap.get(closure);
+                if (targetState == null) {
+                    targetState = new State(NfaStateCounter.next(), containsFinal(closure));
+                    dfa.addState(targetState);
+                    stateMap.put(closure, targetState);
+                    queue.add(closure);
+                }
+
+                dfa.addTransition(currentDfaState, symbol, targetState);
+            }
+        }
+
+        return dfa;
+    }
+
+    private static Set<State> epsilonClosure(Nfa nfa, Set<State> states) {
+        Set<State> closure = new HashSet<>(states);
+        Stack<State> stack = new Stack<>();
+        stack.addAll(states);
+
+
+        while (!stack.isEmpty()) {
+            State s = stack.pop();
+            Set<State> eps = nfa.getTransitions().getOrDefault(s, Map.of()).getOrDefault(Nfa.EPSILON, Set.of());
+            for (State t : eps) {
+                if (closure.add(t)) stack.push(t);
+            }
+        }
+        return closure;
+    }
+
+    private static Set<State> move(Nfa nfa, Set<State> states, Character symbol) {
+        Set<State> result = new HashSet<>();
+        for (State s : states) {
+            Set<State> targets = nfa.getTransitions().getOrDefault(s, Map.of()).getOrDefault(symbol, Set.of());
+            result.addAll(targets);
+        }
+        return result;
+    }
+
+    private static boolean containsFinal(Set<State> states) {
+        for (State s : states) {
+            if (s.isFinal()) return true;
+        }
+        return false;
+    }
+
+    private static Set<Character> getUsedAlphabet(Nfa nfa) {
+        Set<Character> result = new HashSet<>();
+        for (Map<Character, Set<State>> map : nfa.getTransitions().values()) {
+            result.addAll(map.keySet());
+        }
+        return result;
+    }
+
+
 }
 
 
