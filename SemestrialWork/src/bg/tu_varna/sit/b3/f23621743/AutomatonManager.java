@@ -21,7 +21,7 @@ public class AutomatonManager {
         return automatons.get(id);
     }
 
-    // === Операции ===
+    //Операции
     public boolean recognizes(String id, String word) {
         Automaton a = getAutomaton(id);
         return a != null && a.recognizes(word);
@@ -61,6 +61,14 @@ public class AutomatonManager {
         throw new IllegalArgumentException("Only NFA can be determinized.");
     }
 
+    public boolean isFinite(String id) {
+        Automaton a = getAutomaton(id);
+        if (a instanceof Nfa) {
+            return AutomatonOperations.isFiniteLanguage((Nfa) a);
+        }
+        throw new IllegalArgumentException("Only NFA supported.");
+    }
+
     public String concat(String id1, String id2) {
         Automaton a1 = getAutomaton(id1);
         Automaton a2 = getAutomaton(id2);
@@ -80,12 +88,22 @@ public class AutomatonManager {
         throw new IllegalArgumentException("Un (Kleene star) requires NFA automaton.");
     }
 
-    // === Сериализация ===
+    public void print(String id) {
+        Automaton a = getAutomaton(id);
+        if (a != null) {
+            System.out.println(a);
+        } else {
+            System.out.println("No such automaton: " + id);
+        }
+    }
+
+    //Сериализация(питай дали е удачно да ползваш Сериализация)
     public void save(String id, String filename) throws IOException {
-        Automaton automaton = getAutomaton(id);
-        if (automaton instanceof Serializable) {
+        Automaton a = getAutomaton(id);
+        if (a instanceof Serializable) {
             try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
-                out.writeObject(automaton);
+                out.writeObject(a);
+                System.out.println("Automaton " + id + " saved to file: " + filename);
             }
         } else {
             throw new IllegalArgumentException("Automaton is not serializable.");
@@ -96,18 +114,25 @@ public class AutomatonManager {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
             Object obj = in.readObject();
             if (obj instanceof Automaton) {
-                return addAutomaton((Automaton) obj);
+                String id = addAutomaton((Automaton) obj);
+                System.out.println("Automaton loaded with ID: " + id);
+                return id;
+            } else {
+                throw new IOException("File does not contain a valid automaton.");
             }
         }
-        throw new IOException("Invalid file format.");
     }
-
-    public void print(String id) {
-        Automaton a = getAutomaton(id);
-        if (a != null) {
-            System.out.println(a);
+    public void saveAsText(String id, String filename) throws IOException {
+        Automaton automaton = getAutomaton(id);
+        if (automaton != null) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+                writer.println(automaton.toString());
+                System.out.println("Automaton " + id + " saved as readable text to: " + filename);
+            }
         } else {
-            System.out.println("No such automaton: " + id);
+            throw new IllegalArgumentException("No such automaton: " + id);
         }
     }
+
+
 }

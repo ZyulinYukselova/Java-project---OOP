@@ -1,0 +1,11 @@
+States: [State 6, State 7 (final), State 8 (final), State 9 (final)]
+Alphabet: [a, b, c]
+Transitions:
+State 6 --a--> [State 7 (final)]
+State 7 (final) --b--> [State 8 (final)]
+State 7 (final) --c--> [State 9 (final)]
+State 8 (final) --b--> [State 8 (final)]
+State 8 (final) --c--> [State 9 (final)]
+State 9 (final) --b--> [State 8 (final)]
+State 9 (final) --c--> [State 9 (final)]
+

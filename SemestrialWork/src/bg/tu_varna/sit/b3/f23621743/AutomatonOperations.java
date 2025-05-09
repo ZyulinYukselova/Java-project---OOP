@@ -298,6 +298,29 @@ public class AutomatonOperations {
         }
         return result;
     }
+    public static boolean isFiniteLanguage(Nfa nfa) {
+        Set<State> visited = new HashSet<>();
+        Set<State> stack = new HashSet<>();
+        return !hasCycle(nfa, nfa.getStartState(), visited, stack);
+    }
+
+    private static boolean hasCycle(Nfa nfa, State current, Set<State> visited, Set<State> stack) {
+        if (stack.contains(current)) return true;
+        if (!visited.add(current)) return false;
+
+        stack.add(current);
+
+        Map<Character, Set<State>> next = nfa.getTransitions().getOrDefault(current, Map.of());
+        for (Set<State> targets : next.values()) {
+            for (State nextState : targets) {
+                if (hasCycle(nfa, nextState, visited, stack)) return true;
+            }
+        }
+
+        stack.remove(current);
+        return false;
+    }
+
 
 
 }

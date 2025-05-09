@@ -8,7 +8,7 @@ public class RegexParser {
         Stack<Nfa> operands = new Stack<>();
         Stack<Character> operators = new Stack<>();
 
-        // Добавяне на явни оператори за конкатенация
+        //оператори за конкатенация
         regex = insertExplicitConcatOperator(regex);
 
         for (int i = 0; i < regex.length(); i++) {
@@ -29,7 +29,7 @@ public class RegexParser {
                     processOperator(operands, c);
                     break;
                 case '|':
-                case '.': // използваме '.' за конкатенация
+                case '.': // използваш '.' за конкатенация
                     while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(c)) {
                         processOperator(operands, operators.pop());
                     }

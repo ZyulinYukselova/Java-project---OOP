@@ -1,8 +1,10 @@
 package bg.tu_varna.sit.b3.f23621743;
 
 import java.util.*;
+import java.io.Serializable;
 
-public class Nfa implements Automaton {
+
+public class Nfa implements Automaton,Serializable {
     public static final Character EPSILON = null;
 
     private Set<Character> alphabet;
@@ -277,7 +279,7 @@ public class Nfa implements Automaton {
             }
         }
 
-        return sb.toString(); // задължително, иначе нищо няма да печата
+        return sb.toString(); // задължително, иначе нищо няма да печаш
     }
 }
 

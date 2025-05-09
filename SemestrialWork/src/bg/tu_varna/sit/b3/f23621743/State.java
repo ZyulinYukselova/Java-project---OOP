@@ -1,8 +1,10 @@
 package bg.tu_varna.sit.b3.f23621743;
 
 import java.util.Objects;
+import java.io.Serializable;
 
-public class State {
+
+public class State  implements  Serializable{
     private final int id;
     private boolean isFinal;
 
