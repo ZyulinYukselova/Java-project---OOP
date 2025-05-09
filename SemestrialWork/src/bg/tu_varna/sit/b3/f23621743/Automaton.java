@@ -1,5 +1,7 @@
 package bg.tu_varna.sit.b3.f23621743;
 
+import bg.tu_varna.sit.b3.f23621743.visitor.AutomatonVisitor;
+
 import java.util.Map;
 import java.util.Set;
 
@@ -13,4 +15,7 @@ public interface Automaton {
     Set<State> getStates();
     State getStartState();
     Map<State, Map<Character, Set<State>>> getTransitions();
+    
+    // Visitor pattern support
+    <T> T accept(AutomatonVisitor<T> visitor);
 }

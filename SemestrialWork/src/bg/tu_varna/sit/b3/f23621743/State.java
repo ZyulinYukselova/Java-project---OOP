@@ -9,6 +9,7 @@ public class State  implements  Serializable{
     private boolean isFinal;
 
     public State(int id, boolean isFinal) {
+        if (id < 0) throw new IllegalArgumentException("State ID must be non-negative");
         this.id = id;
         this.isFinal = isFinal;
     }
