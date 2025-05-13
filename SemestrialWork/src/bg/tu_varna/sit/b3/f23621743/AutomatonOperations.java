@@ -299,24 +299,39 @@ public class AutomatonOperations {
         return result;
     }
     public static boolean isFiniteLanguage(Nfa nfa) {
+        // A language is finite if there are no cycles in the automaton
+        // that can be reached from the start state and lead to a final state
         Set<State> visited = new HashSet<>();
         Set<State> stack = new HashSet<>();
+        
         return !hasCycle(nfa, nfa.getStartState(), visited, stack);
     }
 
     private static boolean hasCycle(Nfa nfa, State current, Set<State> visited, Set<State> stack) {
-        if (stack.contains(current)) return true;
-        if (!visited.add(current)) return false;
-
+        if (stack.contains(current)) {
+            // Found a cycle
+            return true;
+        }
+        
+        if (visited.contains(current)) {
+            return false;
+        }
+        
+        visited.add(current);
         stack.add(current);
-
-        Map<Character, Set<State>> next = nfa.getTransitions().getOrDefault(current, Map.of());
-        for (Set<State> targets : next.values()) {
-            for (State nextState : targets) {
-                if (hasCycle(nfa, nextState, visited, stack)) return true;
+        
+        // Check all transitions from current state
+        Map<Character, Set<State>> transitions = nfa.getTransitions().get(current);
+        if (transitions != null) {
+            for (Set<State> targets : transitions.values()) {
+                for (State target : targets) {
+                    if (hasCycle(nfa, target, visited, stack)) {
+                        return true;
+                    }
+                }
             }
         }
-
+        
         stack.remove(current);
         return false;
     }

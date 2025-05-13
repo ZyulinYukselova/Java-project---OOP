@@ -9,25 +9,75 @@ import bg.tu_varna.sit.b3.f23621743.visitor.EmptyLanguageVisitor;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class AutomatonManager {
-    private final Map<String, Automaton> automatons = new HashMap<>();
-    private static int idCounter = 0;
+    private static final Map<Integer, Nfa> loadedAutomata = new HashMap<>();
+    private static int nextId = 1;
 
-    public String addAutomaton(Automaton automaton) {
-        ValidationUtils.validateAutomaton(automaton);
-        String id = "A" + idCounter++;
-        automatons.put(id, automaton);
+    public static int loadAutomaton(String filename) throws IOException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            Nfa automaton = (Nfa) ois.readObject();
+            int id = nextId++;
+            loadedAutomata.put(id, automaton);
+            return id;
+        } catch (ClassNotFoundException e) {
+            throw new IOException("Invalid automaton file format", e);
+        }
+    }
+
+    public static void saveAutomaton(int id, String filename) throws IOException {
+        Nfa automaton = loadedAutomata.get(id);
+        if (automaton == null) {
+            throw new IllegalArgumentException("Automaton with ID " + id + " not found");
+        }
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(automaton);
+        }
+    }
+
+    public static List<Integer> listAutomata() {
+        return new ArrayList<>(loadedAutomata.keySet());
+    }
+
+    public static Nfa getAutomaton(int id) {
+        Nfa automaton = loadedAutomata.get(id);
+        if (automaton == null) {
+            throw new IllegalArgumentException("Automaton with ID " + id + " not found");
+        }
+        return automaton;
+    }
+
+    public static void closeAutomaton(int id) {
+        if (!loadedAutomata.containsKey(id)) {
+            throw new IllegalArgumentException("Automaton with ID " + id + " not found");
+        }
+        loadedAutomata.remove(id);
+    }
+
+    public static int addAutomaton(Nfa automaton) {
+        int id = nextId++;
+        loadedAutomata.put(id, automaton);
         return id;
     }
 
-    public Set<String> listAutomata() {
-        return new HashSet<>(automatons.keySet());
+    public static int fromRegex(String regex) {
+        Nfa nfa = RegexParser.parse(regex);
+        return addAutomaton(nfa);
+    }
+
+    public String addAutomaton(Automaton automaton) {
+        ValidationUtils.validateAutomaton(automaton);
+        String id = "A" + nextId++;
+        loadedAutomata.put(nextId - 1, (Nfa) automaton);
+        return id;
     }
 
     public Automaton getAutomaton(String id) {
         ValidationUtils.validateNotEmpty(id, "Automaton ID");
-        Automaton automaton = automatons.get(id);
+        Integer integerId = Integer.parseInt(id.substring(1));
+        Nfa automaton = loadedAutomata.get(integerId);
         if (automaton == null) {
             throw new IllegalArgumentException("No automaton found with ID: " + id);
         }
@@ -38,12 +88,6 @@ public class AutomatonManager {
         ValidationUtils.validateWord(word);
         Automaton a = getAutomaton(id);
         return a.recognizes(word);
-    }
-
-    public String fromRegex(String regex) {
-        ValidationUtils.validateNotEmpty(regex, "Regular expression");
-        Nfa nfa = RegexParser.parse(regex);
-        return addAutomaton(nfa);
     }
 
     public boolean isEmpty(String id) {
