@@ -2,71 +2,85 @@ package bg.tu_varna.sit.b3.f23621743;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
         System.out.println("\"Welcome to the NFA program! Type 'help' for a list of commands. Type 'exit' to quit.");
+        
+        Map<Command, Consumer<String[]>> commandMap = new HashMap<>();
+        commandMap.put(Command.LIST, inputArgs -> handleList());
+        commandMap.put(Command.PRINT, inputArgs -> {
+            if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
+            handlePrint(Integer.parseInt(inputArgs[1]));
+        });
+        commandMap.put(Command.SAVE, inputArgs -> {
+            if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton ID or filename");
+            try {
+                handleSave(Integer.parseInt(inputArgs[1]), inputArgs[2]);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        commandMap.put(Command.EMPTY, inputArgs -> {
+            if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
+            handleEmpty(Integer.parseInt(inputArgs[1]));
+        });
+        commandMap.put(Command.DETERMINISTIC, inputArgs -> {
+            if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
+            handleDeterministic(Integer.parseInt(inputArgs[1]));
+        });
+        commandMap.put(Command.RECOGNIZE, inputArgs -> {
+            if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton ID or word");
+            handleRecognize(Integer.parseInt(inputArgs[1]), inputArgs[2]);
+        });
+        commandMap.put(Command.UNION, inputArgs -> {
+            if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton IDs");
+            handleUnion(Integer.parseInt(inputArgs[1]), Integer.parseInt(inputArgs[2]));
+        });
+        commandMap.put(Command.CONCAT, inputArgs -> {
+            if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton IDs");
+            handleConcat(Integer.parseInt(inputArgs[1]), Integer.parseInt(inputArgs[2]));
+        });
+        commandMap.put(Command.UN, inputArgs -> {
+            if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
+            handleUn(Integer.parseInt(inputArgs[1]));
+        });
+        commandMap.put(Command.REG, inputArgs -> {
+            if (inputArgs.length < 2) throw new IllegalArgumentException("Missing regular expression");
+            handleReg(inputArgs[1]);
+        });
+        commandMap.put(Command.HELP, inputArgs -> printHelp());
+        
         while (true) {
             System.out.print(">> ");
             String line = scanner.nextLine();
             if (line.trim().isEmpty()) continue;
             String[] inputArgs = line.trim().split("\\s+");
-            String command = inputArgs[0].toLowerCase();
-            if (command.equals("exit")) {
+            
+            Optional<Command> commandOpt = Command.fromString(inputArgs[0]);
+            
+            if (commandOpt.isEmpty()) {
+                System.out.println("Unknown command: " + inputArgs[0]);
+                printHelp();
+                continue;
+            }
+            
+            Command command = commandOpt.get();
+            if (command == Command.EXIT) {
                 System.out.println("Exiting...");
                 break;
             }
+            
             try {
-                switch (command) {
-                    case "list":
-                        handleList();
-                        break;
-                    case "print":
-                        if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
-                        handlePrint(Integer.parseInt(inputArgs[1]));
-                        break;
-                    case "save":
-                        if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton ID or filename");
-                        handleSave(Integer.parseInt(inputArgs[1]), inputArgs[2]);
-                        break;
-                    case "empty":
-                        if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
-                        handleEmpty(Integer.parseInt(inputArgs[1]));
-                        break;
-                    case "deterministic":
-                        if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
-                        handleDeterministic(Integer.parseInt(inputArgs[1]));
-                        break;
-                    case "recognize":
-                        if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton ID or word");
-                        handleRecognize(Integer.parseInt(inputArgs[1]), inputArgs[2]);
-                        break;
-                    case "union":
-                        if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton IDs");
-                        handleUnion(Integer.parseInt(inputArgs[1]), Integer.parseInt(inputArgs[2]));
-                        break;
-                    case "concat":
-                        if (inputArgs.length < 3) throw new IllegalArgumentException("Missing automaton IDs");
-                        handleConcat(Integer.parseInt(inputArgs[1]), Integer.parseInt(inputArgs[2]));
-                        break;
-                    case "un":
-                        if (inputArgs.length < 2) throw new IllegalArgumentException("Missing automaton ID");
-                        handleUn(Integer.parseInt(inputArgs[1]));
-                        break;
-                    case "reg":
-                        if (inputArgs.length < 2) throw new IllegalArgumentException("Missing regular expression");
-                        handleReg(inputArgs[1]);
-                        break;
-                    case "help":
-                        printHelp();
-                        break;
-                    default:
-                        System.out.println("Unknown command: " + command);
-                        printHelp();
-                }
+                Consumer<String[]> handler = commandMap.get(command);
+                handler.accept(inputArgs);
             } catch (Exception e) {
                 System.err.println("Error: " + e.getMessage());
             }

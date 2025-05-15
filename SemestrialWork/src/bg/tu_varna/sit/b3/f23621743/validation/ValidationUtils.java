@@ -63,12 +63,10 @@ public class ValidationUtils {
             throw new IllegalArgumentException("NFA must have at least one state");
         }
 
-        // Validate all states in transitions exist in the state set
         for (State state : nfa.getTransitions().keySet()) {
             validateStateExists(state, nfa.getStates(), "Transition source state");
         }
 
-        // Validate all target states in transitions exist in the state set
         for (Map<Character, Set<State>> transitions : nfa.getTransitions().values()) {
             for (Set<State> targets : transitions.values()) {
                 for (State target : targets) {
@@ -77,7 +75,6 @@ public class ValidationUtils {
             }
         }
 
-        // Validate all symbols in transitions
         for (Map<Character, Set<State>> transitions : nfa.getTransitions().values()) {
             for (Character symbol : transitions.keySet()) {
                 validateSymbol(symbol);
