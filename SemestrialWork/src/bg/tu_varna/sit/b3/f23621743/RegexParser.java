@@ -29,7 +29,7 @@ public class RegexParser {
                     processOperator(operands, c);
                     break;
                 case '|':
-                case '.': // използваш '.' за конкатенация
+                case '.': // използвам '.' за конкатенация
                     while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(c)) {
                         processOperator(operands, operators.pop());
                     }
