@@ -7,35 +7,12 @@ import bg.tu_varna.sit.b3.f23621743.validation.ValidationUtils;
 import bg.tu_varna.sit.b3.f23621743.visitor.DeterministicVisitor;
 import bg.tu_varna.sit.b3.f23621743.visitor.EmptyLanguageVisitor;
 
-import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class AutomatonManager {
     private static final Map<Integer, Nfa> loadedAutomata = new HashMap<>();
     private static int nextId = 1;
-
-    public static int loadAutomaton(String filename) throws IOException {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
-            Nfa automaton = (Nfa) ois.readObject();
-            int id = nextId++;
-            loadedAutomata.put(id, automaton);
-            return id;
-        } catch (ClassNotFoundException e) {
-            throw new IOException("Invalid automaton file format", e);
-        }
-    }
-
-    public static void saveAutomaton(int id, String filename) throws IOException {
-        Nfa automaton = loadedAutomata.get(id);
-        if (automaton == null) {
-            throw new IllegalArgumentException("Automaton with ID " + id + " not found");
-        }
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
-            oos.writeObject(automaton);
-        }
-    }
 
     public static List<Integer> listAutomata() {
         return new ArrayList<>(loadedAutomata.keySet());
@@ -132,41 +109,5 @@ public class AutomatonManager {
     public void print(String id) {
         Automaton a = getAutomaton(id);
         System.out.println(a);
-    }
-
-    public void save(String id, String filename) throws IOException {
-        ValidationUtils.validateFileOperation(filename, "save");
-        Automaton a = getAutomaton(id);
-        if (a instanceof Serializable) {
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(filename))) {
-                out.writeObject(a);
-                System.out.println("Automaton " + id + " saved to file: " + filename);
-            }
-        } else {
-            throw new IllegalArgumentException("Automaton is not serializable");
-        }
-    }
-
-    public String open(String filename) throws IOException, ClassNotFoundException {
-        ValidationUtils.validateFileOperation(filename, "open");
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(filename))) {
-            Object obj = in.readObject();
-            if (obj instanceof Automaton) {
-                String id = addAutomaton((Automaton) obj);
-                System.out.println("Automaton loaded with ID: " + id);
-                return id;
-            } else {
-                throw new IOException("File does not contain a valid automaton");
-            }
-        }
-    }
-
-    public void saveAsText(String id, String filename) throws IOException {
-        ValidationUtils.validateFileOperation(filename, "save as text");
-        Automaton automaton = getAutomaton(id);
-        try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
-            writer.println(automaton.toString());
-            System.out.println("Automaton " + id + " saved as readable text to: " + filename);
-        }
     }
 }

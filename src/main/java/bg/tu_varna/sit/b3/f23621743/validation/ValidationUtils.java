@@ -30,26 +30,20 @@ public class ValidationUtils {
     }
 
     public static void validateSymbol(Character symbol) {
-        if (symbol != null && symbol != Nfa.EPSILON) {
-            if (!Character.isLetterOrDigit(symbol)) {
-                throw new IllegalArgumentException("Symbol must be a letter or digit, got: " + symbol);
-            }
+        if (symbol != null && !Character.isLetterOrDigit(symbol)) {
+            throw new IllegalArgumentException("Symbol must be a letter or digit, got: " + symbol);
         }
     }
 
     public static void validateWord(String word) {
-        validateNotNull(word, "Word");
-        for (char c : word.toCharArray()) {
-            if (!Character.isLetterOrDigit(c)) {
-                throw new IllegalArgumentException("Word can only contain letters and digits, got: " + c);
-            }
+        if (word == null) {
+            throw new IllegalArgumentException("Word cannot be null");
         }
     }
 
     public static void validateAutomaton(Automaton automaton) {
-        validateNotNull(automaton, "Automaton");
-        if (automaton instanceof Nfa) {
-            validateNfa((Nfa) automaton);
+        if (automaton == null) {
+            throw new IllegalArgumentException("Automaton cannot be null");
         }
     }
 
@@ -93,9 +87,8 @@ public class ValidationUtils {
     }
 
     public static void validateFileOperation(String filename, String operation) {
-        validateNotEmpty(filename, "Filename");
-        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
-            throw new IllegalArgumentException("Invalid filename: " + filename);
+        if (filename == null || filename.trim().isEmpty()) {
+            throw new IllegalArgumentException("Filename cannot be empty for " + operation);
         }
     }
 } 

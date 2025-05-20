@@ -4,6 +4,7 @@ import bg.tu_varna.sit.b3.f23621743.Automaton;
 import bg.tu_varna.sit.b3.f23621743.Nfa;
 import bg.tu_varna.sit.b3.f23621743.nfa.NfaBuilder;
 import bg.tu_varna.sit.b3.f23621743.validation.ValidationUtils;
+import bg.tu_varna.sit.b3.f23621743.nfa.NfaOperations;
 
 public class AutomatonFactory {
     
@@ -38,31 +39,14 @@ public class AutomatonFactory {
     }
 
     public static Automaton createUnionNfa(Automaton a1, Automaton a2) {
-        ValidationUtils.validateAutomaton(a1);
-        ValidationUtils.validateAutomaton(a2);
-        
-        if (!(a1 instanceof Nfa) || !(a2 instanceof Nfa)) {
-            throw new IllegalArgumentException("Both automata must be NFAs");
-        }
-        return Nfa.union((Nfa) a1, (Nfa) a2);
+        return NfaOperations.union((Nfa)a1, (Nfa)a2);
     }
 
     public static Automaton createConcatNfa(Automaton a1, Automaton a2) {
-        ValidationUtils.validateAutomaton(a1);
-        ValidationUtils.validateAutomaton(a2);
-        
-        if (!(a1 instanceof Nfa) || !(a2 instanceof Nfa)) {
-            throw new IllegalArgumentException("Both automata must be NFAs");
-        }
-        return Nfa.concat((Nfa) a1, (Nfa) a2);
+        return NfaOperations.concat((Nfa)a1, (Nfa)a2);
     }
 
     public static Automaton createKleeneStarNfa(Automaton a) {
-        ValidationUtils.validateAutomaton(a);
-        
-        if (!(a instanceof Nfa)) {
-            throw new IllegalArgumentException("Automaton must be an NFA");
-        }
-        return Nfa.kleeneStar((Nfa) a);
+        return NfaOperations.kleeneStar((Nfa)a);
     }
 } 
