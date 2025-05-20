@@ -1,8 +1,10 @@
 package bg.tu_varna.sit.b3.f23621743;
 
 import bg.tu_varna.sit.b3.f23621743.factory.AutomatonFactory;
+import bg.tu_varna.sit.b3.f23621743.nfa.Nfa;
 import bg.tu_varna.sit.b3.f23621743.nfa.NfaOperations;
 import bg.tu_varna.sit.b3.f23621743.nfa.NfaValidator;
+import bg.tu_varna.sit.b3.f23621743.nfa.RegexParser;
 import bg.tu_varna.sit.b3.f23621743.validation.ValidationUtils;
 import bg.tu_varna.sit.b3.f23621743.visitor.DeterministicVisitor;
 import bg.tu_varna.sit.b3.f23621743.visitor.EmptyLanguageVisitor;
@@ -11,14 +13,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class AutomatonManager {
-    private static final Map<Integer, Nfa> loadedAutomata = new HashMap<>();
+    private static final Map<String, Nfa> loadedAutomata = new HashMap<>();
     private static int nextId = 1;
 
-    public static List<Integer> listAutomata() {
+    public static List<String> listAutomata() {
         return new ArrayList<>(loadedAutomata.keySet());
     }
 
-    public static Nfa getAutomaton(int id) {
+    public static Nfa getAutomaton(String id) {
         Nfa automaton = loadedAutomata.get(id);
         if (automaton == null) {
             throw new IllegalArgumentException("Automaton with ID " + id + " not found");
@@ -26,35 +28,38 @@ public class AutomatonManager {
         return automaton;
     }
 
-    public static void closeAutomaton(int id) {
+    public static void closeAutomaton(String id) {
         if (!loadedAutomata.containsKey(id)) {
             throw new IllegalArgumentException("Automaton with ID " + id + " not found");
         }
         loadedAutomata.remove(id);
     }
 
-    public static int addAutomaton(Nfa automaton) {
-        int id = nextId++;
+    public static String addAutomaton(Nfa automaton) {
+        String id = "A" + nextId++;
         loadedAutomata.put(id, automaton);
         return id;
     }
 
-    public static int fromRegex(String regex) {
+    public static String fromRegex(String regex) {
         Nfa nfa = RegexParser.parse(regex);
         return addAutomaton(nfa);
     }
 
-    public String addAutomaton(Automaton automaton) {
+    public String addAutomatonWithValidation(Automaton automaton) {
         ValidationUtils.validateAutomaton(automaton);
-        String id = "A" + nextId++;
-        loadedAutomata.put(nextId - 1, (Nfa) automaton);
-        return id;
+        if (!(automaton instanceof Nfa)) {
+            throw new IllegalArgumentException("Only NFA automata are supported");
+        }
+        return addAutomaton((Nfa) automaton);
     }
 
-    public Automaton getAutomaton(String id) {
+    public Nfa getAutomatonById(String id) {
         ValidationUtils.validateNotEmpty(id, "Automaton ID");
-        Integer integerId = Integer.parseInt(id.substring(1));
-        Nfa automaton = loadedAutomata.get(integerId);
+        if (!id.startsWith("A")) {
+            throw new IllegalArgumentException("Invalid automaton ID format: " + id);
+        }
+        Nfa automaton = loadedAutomata.get(id);
         if (automaton == null) {
             throw new IllegalArgumentException("No automaton found with ID: " + id);
         }
@@ -63,51 +68,42 @@ public class AutomatonManager {
 
     public boolean recognizes(String id, String word) {
         ValidationUtils.validateWord(word);
-        Automaton a = getAutomaton(id);
-        return a.recognizes(word);
+        Nfa automaton = getAutomatonById(id);
+        return automaton.recognizes(word);
     }
 
     public boolean isEmpty(String id) {
-        Automaton a = getAutomaton(id);
-        return a.accept(new EmptyLanguageVisitor());
+        Nfa automaton = getAutomatonById(id);
+        return automaton.accept(new EmptyLanguageVisitor());
     }
 
     public boolean isDeterministic(String id) {
-        Automaton a = getAutomaton(id);
-        return a.accept(new DeterministicVisitor());
+        Nfa automaton = getAutomatonById(id);
+        return automaton.accept(new DeterministicVisitor());
     }
 
     public String union(String id1, String id2) {
-        Automaton a1 = getAutomaton(id1);
-        Automaton a2 = getAutomaton(id2);
-        if (a1 instanceof Nfa && a2 instanceof Nfa) {
-            Automaton result = AutomatonFactory.createUnionNfa(a1, a2);
-            return addAutomaton(result);
-        }
-        throw new IllegalArgumentException("Union requires NFA automata");
+        Nfa a1 = getAutomatonById(id1);
+        Nfa a2 = getAutomatonById(id2);
+        Nfa result = Nfa.union(a1, a2);
+        return addAutomaton(result);
     }
 
     public String concat(String id1, String id2) {
-        Automaton a1 = getAutomaton(id1);
-        Automaton a2 = getAutomaton(id2);
-        if (a1 instanceof Nfa && a2 instanceof Nfa) {
-            Automaton result = AutomatonFactory.createConcatNfa(a1, a2);
-            return addAutomaton(result);
-        }
-        throw new IllegalArgumentException("Concat requires NFA automata");
+        Nfa a1 = getAutomatonById(id1);
+        Nfa a2 = getAutomatonById(id2);
+        Nfa result = Nfa.concat(a1, a2);
+        return addAutomaton(result);
     }
 
-    public String un(String id) {
-        Automaton a = getAutomaton(id);
-        if (a instanceof Nfa) {
-            Automaton result = AutomatonFactory.createKleeneStarNfa(a);
-            return addAutomaton(result);
-        }
-        throw new IllegalArgumentException("Un (Kleene star) requires NFA automaton");
+    public String kleeneStar(String id) {
+        Nfa automaton = getAutomatonById(id);
+        Nfa result = Nfa.kleeneStar(automaton);
+        return addAutomaton(result);
     }
 
     public void print(String id) {
-        Automaton a = getAutomaton(id);
-        System.out.println(a);
+        Nfa automaton = getAutomatonById(id);
+        System.out.println(automaton);
     }
 }

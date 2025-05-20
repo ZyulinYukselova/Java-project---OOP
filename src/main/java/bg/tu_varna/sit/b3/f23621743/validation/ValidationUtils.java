@@ -1,8 +1,7 @@
 package bg.tu_varna.sit.b3.f23621743.validation;
 
 import bg.tu_varna.sit.b3.f23621743.Automaton;
-import bg.tu_varna.sit.b3.f23621743.Nfa;
-import bg.tu_varna.sit.b3.f23621743.State;
+import bg.tu_varna.sit.b3.f23621743.nfa.Nfa;
 
 import java.util.Map;
 import java.util.Set;
@@ -22,15 +21,15 @@ public class ValidationUtils {
         }
     }
 
-    public static void validateStateExists(State state, Set<State> states, String paramName) {
+    public static void validateStateExists(String state, Set<String> states, String paramName) {
         validateNotNull(state, paramName);
         if (!states.contains(state)) {
             throw new IllegalArgumentException(paramName + " does not exist in the automaton");
         }
     }
 
-    public static void validateSymbol(Character symbol) {
-        if (symbol != null && !Character.isLetterOrDigit(symbol)) {
+    public static void validateSymbol(String symbol) {
+        if (symbol != null && !symbol.isEmpty() && !Character.isLetterOrDigit(symbol.charAt(0))) {
             throw new IllegalArgumentException("Symbol must be a letter or digit, got: " + symbol);
         }
     }
@@ -57,20 +56,20 @@ public class ValidationUtils {
             throw new IllegalArgumentException("NFA must have at least one state");
         }
 
-        for (State state : nfa.getTransitions().keySet()) {
+        for (String state : nfa.getTransitions().keySet()) {
             validateStateExists(state, nfa.getStates(), "Transition source state");
         }
 
-        for (Map<Character, Set<State>> transitions : nfa.getTransitions().values()) {
-            for (Set<State> targets : transitions.values()) {
-                for (State target : targets) {
+        for (Map<String, Set<String>> transitions : nfa.getTransitions().values()) {
+            for (Set<String> targets : transitions.values()) {
+                for (String target : targets) {
                     validateStateExists(target, nfa.getStates(), "Transition target state");
                 }
             }
         }
 
-        for (Map<Character, Set<State>> transitions : nfa.getTransitions().values()) {
-            for (Character symbol : transitions.keySet()) {
+        for (Map<String, Set<String>> transitions : nfa.getTransitions().values()) {
+            for (String symbol : transitions.keySet()) {
                 validateSymbol(symbol);
             }
         }
@@ -82,8 +81,8 @@ public class ValidationUtils {
                 String.format("Invalid range: start (%c) must be less than or equal to end (%c)", start, end)
             );
         }
-        validateSymbol(start);
-        validateSymbol(end);
+        validateSymbol(String.valueOf(start));
+        validateSymbol(String.valueOf(end));
     }
 
     public static void validateFileOperation(String filename, String operation) {

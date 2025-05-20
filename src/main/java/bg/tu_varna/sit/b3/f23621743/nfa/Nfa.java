@@ -1,10 +1,7 @@
-package bg.tu_varna.sit.b3.f23621743;
+package bg.tu_varna.sit.b3.f23621743.nfa;
 
-import bg.tu_varna.sit.b3.f23621743.nfa.NfaOperations;
-import bg.tu_varna.sit.b3.f23621743.nfa.NfaSimulator;
-import bg.tu_varna.sit.b3.f23621743.nfa.NfaValidator;
+import bg.tu_varna.sit.b3.f23621743.Automaton;
 import bg.tu_varna.sit.b3.f23621743.visitor.AutomatonVisitor;
-
 import java.util.*;
 
 public class Nfa implements Automaton {
@@ -58,15 +55,15 @@ public class Nfa implements Automaton {
     }
 
     public static Nfa union(Nfa a1, Nfa a2) {
-        return NfaOperations.union(a1, a2);
+        return AutomatonOperations.union(a1, a2);
     }
 
     public static Nfa concat(Nfa a1, Nfa a2) {
-        return NfaOperations.concat(a1, a2);
+        return AutomatonOperations.concat(a1, a2);
     }
 
     public static Nfa kleeneStar(Nfa a) {
-        return NfaOperations.kleeneStar(a);
+        return AutomatonOperations.kleeneStar(a);
     }
 
     @Override
@@ -88,6 +85,4 @@ public class Nfa implements Automaton {
         
         return sb.toString();
     }
-}
-
-
+} 

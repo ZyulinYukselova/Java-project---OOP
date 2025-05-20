@@ -1,6 +1,6 @@
 package bg.tu_varna.sit.b3.f23621743;
 
-import bg.tu_varna.sit.b3.f23621743.nfa.AutomatonOperations;
+import bg.tu_varna.sit.b3.f23621743.nfa.Nfa;
 import bg.tu_varna.sit.b3.f23621743.validation.ValidationUtils;
 import java.io.IOException;
 import java.util.*;
@@ -20,7 +20,7 @@ public class CommandProcessor {
 
     private void initializeCommands() {
         commandMap.put(Command.LIST, args -> {
-            List<Integer> automata = AutomatonManager.listAutomata();
+            List<String> automata = AutomatonManager.listAutomata();
             if (automata.isEmpty()) {
                 System.out.println("No automata loaded");
             } else {
@@ -33,7 +33,7 @@ public class CommandProcessor {
                 System.out.println("Usage: print <id>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             Nfa automaton = AutomatonManager.getAutomaton(id);
             System.out.println(automaton);
         });
@@ -43,7 +43,7 @@ public class CommandProcessor {
                 System.out.println("Usage: save <id> <filename>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             String filename = args[2];
             try {
                 FileOperations.saveAutomaton(id, filename);
@@ -58,7 +58,7 @@ public class CommandProcessor {
                 System.out.println("Usage: savejson <id> <filename>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             String filename = args[2];
             try {
                 FileOperations.saveToJson(id, filename);
@@ -75,7 +75,7 @@ public class CommandProcessor {
             }
             String filename = args[1];
             try {
-                int id = FileOperations.loadFromJson(filename);
+                String id = FileOperations.loadFromJson(filename);
                 System.out.println("Automaton loaded with ID: " + id);
             } catch (IOException e) {
                 System.out.println("Error loading automaton from JSON: " + e.getMessage());
@@ -87,7 +87,7 @@ public class CommandProcessor {
                 System.out.println("Usage: empty <id>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             Nfa automaton = AutomatonManager.getAutomaton(id);
             System.out.println("Empty language: " + automaton.isEmptyLanguage());
         });
@@ -97,7 +97,7 @@ public class CommandProcessor {
                 System.out.println("Usage: deterministic <id>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             Nfa automaton = AutomatonManager.getAutomaton(id);
             System.out.println("Is deterministic: " + automaton.isDeterministic());
         });
@@ -107,7 +107,7 @@ public class CommandProcessor {
                 System.out.println("Usage: recognize <id> <word>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             String word = args[2];
             Nfa automaton = AutomatonManager.getAutomaton(id);
             System.out.println("Word recognized: " + automaton.recognizes(word));
@@ -118,12 +118,11 @@ public class CommandProcessor {
                 System.out.println("Usage: union <id1> <id2>");
                 return;
             }
-            int id1 = Integer.parseInt(args[1]);
-            int id2 = Integer.parseInt(args[2]);
+            String id1 = args[1];
+            String id2 = args[2];
             Nfa a1 = AutomatonManager.getAutomaton(id1);
             Nfa a2 = AutomatonManager.getAutomaton(id2);
-            Nfa result = AutomatonOperations.union(a1, a2);
-            int newId = AutomatonManager.addAutomaton(result);
+            String newId = AutomatonManager.addAutomaton(Nfa.union(a1, a2));
             System.out.println("Union created with ID: " + newId);
         });
 
@@ -132,12 +131,11 @@ public class CommandProcessor {
                 System.out.println("Usage: concat <id1> <id2>");
                 return;
             }
-            int id1 = Integer.parseInt(args[1]);
-            int id2 = Integer.parseInt(args[2]);
+            String id1 = args[1];
+            String id2 = args[2];
             Nfa a1 = AutomatonManager.getAutomaton(id1);
             Nfa a2 = AutomatonManager.getAutomaton(id2);
-            Nfa result = AutomatonOperations.concat(a1, a2);
-            int newId = AutomatonManager.addAutomaton(result);
+            String newId = AutomatonManager.addAutomaton(Nfa.concat(a1, a2));
             System.out.println("Concatenation created with ID: " + newId);
         });
 
@@ -146,11 +144,10 @@ public class CommandProcessor {
                 System.out.println("Usage: un <id>");
                 return;
             }
-            int id = Integer.parseInt(args[1]);
+            String id = args[1];
             Nfa automaton = AutomatonManager.getAutomaton(id);
-            Nfa result = AutomatonOperations.positiveClosure(automaton);
-            int newId = AutomatonManager.addAutomaton(result);
-            System.out.println("Positive closure created with ID: " + newId);
+            String newId = AutomatonManager.addAutomaton(Nfa.kleeneStar(automaton));
+            System.out.println("Kleene star created with ID: " + newId);
         });
 
         commandMap.put(Command.REG, args -> {
@@ -159,8 +156,7 @@ public class CommandProcessor {
                 return;
             }
             String regex = args[1];
-            Nfa result = AutomatonOperations.fromRegex(regex);
-            int newId = AutomatonManager.addAutomaton(result);
+            String newId = AutomatonManager.fromRegex(regex);
             System.out.println("Automaton from regex created with ID: " + newId);
         });
 
@@ -176,7 +172,7 @@ public class CommandProcessor {
             System.out.println("  recognize <id> <word> - Check if word is recognized");
             System.out.println("  union <id1> <id2> - Create union of two automata");
             System.out.println("  concat <id1> <id2> - Create concatenation of two automata");
-            System.out.println("  un <id> - Create positive closure");
+            System.out.println("  un <id> - Create Kleene star");
             System.out.println("  reg <regex> - Create automaton from regex");
             System.out.println("  exit - Exit program");
         });
@@ -206,16 +202,9 @@ public class CommandProcessor {
             }
             
             try {
-                Consumer<String[]> handler = commandMap.get(command);
-                if (handler != null) {
-                    handler.accept(inputArgs);
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid number format");
-            } catch (IllegalArgumentException e) {
-                System.out.println("Error: " + e.getMessage());
+                commandMap.get(command).accept(inputArgs);
             } catch (Exception e) {
-                System.out.println("Unexpected error: " + e.getMessage());
+                System.out.println("Error: " + e.getMessage());
             }
         }
     }

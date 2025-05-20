@@ -1,6 +1,5 @@
 package bg.tu_varna.sit.b3.f23621743.nfa;
 
-import bg.tu_varna.sit.b3.f23621743.Nfa;
 import java.util.*;
 
 public class NfaValidator {

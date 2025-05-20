@@ -1,6 +1,5 @@
 package bg.tu_varna.sit.b3.f23621743.nfa;
 
-import bg.tu_varna.sit.b3.f23621743.Nfa;
 import java.util.*;
 
 public class NfaBuilder {
@@ -31,21 +30,21 @@ public class NfaBuilder {
         return this;
     }
 
-    public NfaBuilder addTransition(int fromId, char symbol, int toId) {
+    public NfaBuilder addTransition(int fromId, String symbol, int toId) {
         String from = "q" + fromId;
         String to = "q" + toId;
         
         transitions.computeIfAbsent(from, k -> new HashMap<>())
-                  .computeIfAbsent(String.valueOf(symbol), k -> new HashSet<>())
+                  .computeIfAbsent(symbol, k -> new HashSet<>())
                   .add(to);
         return this;
     }
 
     public NfaBuilder addEpsilonTransition(int fromId, int toId) {
-        return addTransition(fromId, 'ε', toId);
+        return addTransition(fromId, "ε", toId);
     }
 
-    public static NfaBuilder createBasicNfa(char symbol) {
+    public static NfaBuilder createBasicNfa(String symbol) {
         return new NfaBuilder()
             .addState(false)  // q0
             .addState(true)   // q1

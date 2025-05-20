@@ -1,76 +1,98 @@
 package bg.tu_varna.sit.b3.f23621743.nfa;
 
-import bg.tu_varna.sit.b3.f23621743.Nfa;
-import java.util.*;
+import java.util.Stack;
 
 public class RegexParser {
-    private static int pos;
-    private static String regex;
 
-    public static Nfa parse(String input) {
-        regex = input;
-        pos = 0;
-        return parseExpression();
-    }
+    public static Nfa parse(String regex) {
+        Stack<Nfa> operands = new Stack<>();
+        Stack<Character> operators = new Stack<>();
 
-    private static Nfa parseExpression() {
-        Nfa result = parseTerm();
-        
-        while (pos < regex.length() && regex.charAt(pos) == '|') {
-            pos++; // Skip '|'
-            Nfa term = parseTerm();
-            result = AutomatonOperations.union(result, term);
-        }
-        
-        return result;
-    }
+        //оператори за конкатенация
+        regex = insertExplicitConcatOperator(regex);
 
-    private static Nfa parseTerm() {
-        Nfa result = parseFactor();
-        
-        while (pos < regex.length() && isFactorStart(regex.charAt(pos))) {
-            Nfa factor = parseFactor();
-            result = AutomatonOperations.concat(result, factor);
-        }
-        
-        return result;
-    }
-
-    private static Nfa parseFactor() {
-        Nfa result = parseBase();
-        
-        while (pos < regex.length() && regex.charAt(pos) == '*') {
-            pos++; // Skip '*'
-            result = AutomatonOperations.positiveClosure(result);
-        }
-        
-        return result;
-    }
-
-    private static Nfa parseBase() {
-        if (pos >= regex.length()) {
-            throw new IllegalArgumentException("Unexpected end of regex");
-        }
-        
-        char c = regex.charAt(pos++);
-        
-        if (c == '(') {
-            Nfa result = parseExpression();
-            if (pos >= regex.length() || regex.charAt(pos) != ')') {
-                throw new IllegalArgumentException("Expected closing parenthesis");
+        for (int i = 0; i < regex.length(); i++) {
+            char c = regex.charAt(i);
+            switch (c) {
+                case '(':
+                    operators.push(c);
+                    break;
+                case ')':
+                    while (!operators.isEmpty() && operators.peek() != '(') {
+                        processOperator(operands, operators.pop());
+                    }
+                    if (!operators.isEmpty()) {
+                        operators.pop(); // махаме '('
+                    }
+                    break;
+                case '*':
+                    processOperator(operands, c);
+                    break;
+                case '|':
+                case '.': // използвам '.' за конкатенация
+                    while (!operators.isEmpty() && precedence(operators.peek()) >= precedence(c)) {
+                        processOperator(operands, operators.pop());
+                    }
+                    operators.push(c);
+                    break;
+                default:
+                    operands.push(singleCharNfa(c));
             }
-            pos++; // Skip ')'
-            return result;
-        } else if (Character.isLetterOrDigit(c)) {
-            return NfaBuilder.createBasicNfa(c).build();
-        } else if (c == 'ε') {
-            return NfaBuilder.createEpsilonNfa().build();
-        } else {
-            throw new IllegalArgumentException("Invalid character in regex: " + c);
+        }
+
+        while (!operators.isEmpty()) {
+            processOperator(operands, operators.pop());
+        }
+
+        return operands.pop();
+    }
+
+    private static void processOperator(Stack<Nfa> operands, char operator) {
+        switch (operator) {
+            case '*':
+                Nfa a = operands.pop();
+                operands.push(Nfa.kleeneStar(a));
+                break;
+            case '|':
+                Nfa b = operands.pop();
+                Nfa a2 = operands.pop();
+                operands.push(Nfa.union(a2, b));
+                break;
+            case '.':
+                Nfa right = operands.pop();
+                Nfa left = operands.pop();
+                operands.push(Nfa.concat(left, right));
+                break;
         }
     }
 
-    private static boolean isFactorStart(char c) {
-        return Character.isLetterOrDigit(c) || c == '(' || c == 'ε';
+    private static int precedence(char op) {
+        return switch (op) {
+            case '*' -> 3;
+            case '.' -> 2;
+            case '|' -> 1;
+            default -> 0;
+        };
+    }
+
+    private static String insertExplicitConcatOperator(String regex) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < regex.length(); i++) {
+            char c1 = regex.charAt(i);
+            sb.append(c1);
+            if (i + 1 < regex.length()) {
+                char c2 = regex.charAt(i + 1);
+                if ((Character.isLetterOrDigit(c1) || c1 == ')' || c1 == '*') &&
+                        (Character.isLetterOrDigit(c2) || c2 == '(')) {
+                    sb.append('.');
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private static Nfa singleCharNfa(char c) {
+        NfaBuilder builder = NfaBuilder.createBasicNfa(String.valueOf(c));
+        return builder.build();
     }
 } 

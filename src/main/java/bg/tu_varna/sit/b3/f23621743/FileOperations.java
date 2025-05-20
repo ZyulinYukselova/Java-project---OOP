@@ -1,6 +1,7 @@
 package bg.tu_varna.sit.b3.f23621743;
 
 import bg.tu_varna.sit.b3.f23621743.validation.ValidationUtils;
+import bg.tu_varna.sit.b3.f23621743.nfa.Nfa;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
@@ -9,7 +10,7 @@ import java.nio.file.*;
 import java.util.*;
 
 public class FileOperations {
-    public static void saveToJson(int id, String filename) throws IOException {
+    public static void saveToJson(String id, String filename) throws IOException {
         Nfa nfa = AutomatonManager.getAutomaton(id);
         
         JSONObject json = new JSONObject();
@@ -46,7 +47,7 @@ public class FileOperations {
         Files.writeString(Paths.get(filename), json.toString(2));
     }
     
-    public static int loadFromJson(String filename) throws IOException {
+    public static String loadFromJson(String filename) throws IOException {
         String jsonContent = Files.readString(Paths.get(filename));
         JSONObject json = new JSONObject(jsonContent);
         
@@ -88,7 +89,7 @@ public class FileOperations {
         return AutomatonManager.addAutomaton(nfa);
     }
     
-    public static void saveAutomaton(int id, String filename) throws IOException {
+    public static void saveAutomaton(String id, String filename) throws IOException {
         ValidationUtils.validateFileOperation(filename, "save");
         Nfa nfa = AutomatonManager.getAutomaton(id);
         
@@ -97,7 +98,7 @@ public class FileOperations {
         }
     }
     
-    public static int loadAutomaton(String filename) throws IOException, ClassNotFoundException {
+    public static String loadAutomaton(String filename) throws IOException, ClassNotFoundException {
         ValidationUtils.validateFileOperation(filename, "open");
         
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
@@ -106,7 +107,7 @@ public class FileOperations {
         }
     }
     
-    public static void saveAsText(int id, String filename) throws IOException {
+    public static void saveAsText(String id, String filename) throws IOException {
         ValidationUtils.validateFileOperation(filename, "save as text");
         Nfa nfa = AutomatonManager.getAutomaton(id);
         
